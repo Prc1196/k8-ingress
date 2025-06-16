@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app3
+  # lables of deployment resource
+  labels:
+    app: app3
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: app3
+  template:
+    metadata:
+      labels:
+        app: app3
+    spec:
+      containers:
+      - name: nginx
+        image: prc1196/app3:1.0.0
+        ports:
+        - containerPort: 80
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: app3
+spec:
+  selector:   #lables are used as selectors
+    app: app3
+  ports:
+  - protocol: TCP
+    port: 80  #service port
+    targetPort: 80
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app3
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:713881819246:certificate/9f8c56c5-d396-4a8a-870f-5e5f2365e08d
+    alb.ingress.kubernetes.io/group.name: prc1196
+spec:
+  ingressClassName: alb
+  rules:
+  - host: "app3.prcdaws82s.online"
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: app3
+            port:
+              number: 80
+
